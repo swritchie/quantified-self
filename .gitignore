@@ -131,3 +131,4 @@ dmypy.json
 # Config
 config.py
 config.yml
+.Rproj.user
