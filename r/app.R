@@ -39,10 +39,9 @@ map_value_to_key <- function(act_name) {
     act_name == '4 - Spending time with friends' ~ 'friends',
     act_name == '5 - Sleeping' ~ 'sleeping',
     act_name == '6 - Learning' ~ 'learning',
-    act_name == '7 - Working' ~ 'working',
-    act_name == '8 - Working out' ~ 'working_out',
-    act_name == '9 - Serving' ~ 'serving',
-    act_name == '10 - Waste' ~ 'waste'
+    act_name == '7 - Working out' ~ 'working_out',
+    act_name == '8 - Working' ~ 'working',
+    act_name == '9 - Waste' ~ 'waste'
   )
 }
 
@@ -101,7 +100,7 @@ plot_act <- function(data, act_name) {
         )), 
       alpha = 1/3
     ) +
-    ggplot2::ylim(-105, 105) +
+    ggplot2::ylim(-100, 100) +
     ggplot2::xlab(label = '') +
     ggplot2::ylab(label = '') +
     ggplot2::ggtitle(label = act_name)
@@ -132,7 +131,7 @@ ui <- shiny::fluidPage(
       shiny::titlePanel(title = 'I-count-ability')
       ),
     shiny::column(
-      width = 7,
+      width = 9,
       shiny::dateRangeInput(
         inputId = 'dates', 
         label = 'Select date range:', 
@@ -144,59 +143,54 @@ ui <- shiny::fluidPage(
       )
     ),
   
-  # Date range
-  shiny::fluidRow(),
-  
   # Summary plot
   shiny::fluidRow(shiny::column(
-    width = 10, 
+    width = 12, 
     shiny::plotOutput(outputId = 'summary')
     )),
   
   # Detail plots
   shiny::fluidRow(
     shiny::column(
-      width = 2, 
+      width = 4, 
       shiny::plotOutput(outputId = 'detail1')
       ),
     shiny::column(
-      width = 2, 
+      width = 4, 
       shiny::plotOutput(outputId = 'detail2')
       ),
     shiny::column(
-      width = 2, 
+      width = 4, 
       shiny::plotOutput(outputId = 'detail3')
-      ),
-    shiny::column(
-      width = 2, 
-      shiny::plotOutput(outputId = 'detail4')
-      ),
-    shiny::column(
-      width = 2, 
-      shiny::plotOutput(outputId = 'detail5')
-      ),
+      )
     ),
   shiny::fluidRow(
     shiny::column(
-      width = 2, 
-      shiny::plotOutput(outputId = 'detail6')
+      width = 4, 
+      shiny::plotOutput(outputId = 'detail4')
       ),
     shiny::column(
-      width = 2, 
+      width = 4, 
+      shiny::plotOutput(outputId = 'detail5')
+      ),
+    shiny::column(
+      width = 4, 
+      shiny::plotOutput(outputId = 'detail6')
+      )
+    ),
+  shiny::fluidRow(
+    shiny::column(
+      width = 4, 
       shiny::plotOutput(outputId = 'detail7')
       ),
     shiny::column(
-      width = 2, 
+      width = 4, 
       shiny::plotOutput(outputId = 'detail8')
       ),
     shiny::column(
-      width = 2, 
+      width = 4, 
       shiny::plotOutput(outputId = 'detail9')
-      ),
-    shiny::column(
-      width = 2, 
-      shiny::plotOutput(outputId = 'detail10')
-      ),
+      )
     )
   )
 
@@ -299,7 +293,7 @@ server <- function(input, output, session) {
   output$detail7 <- shiny::renderPlot(expr = {
     plot_act(
       data = data2(), 
-      act_name = '7 - Working'
+      act_name = '7 - Working out'
     )
   })
   
@@ -307,7 +301,7 @@ server <- function(input, output, session) {
   output$detail8 <- shiny::renderPlot(expr = {
     plot_act(
       data = data2(), 
-      act_name = '8 - Working out'
+      act_name = '8 - Working'
     )
   })
   
@@ -315,15 +309,7 @@ server <- function(input, output, session) {
   output$detail9 <- shiny::renderPlot(expr = {
     plot_act(
       data = data2(), 
-      act_name = '9 - Serving'
-    )
-  })
-  
-  # Detail 10 plot
-  output$detail10 <- shiny::renderPlot(expr = {
-    plot_act(
-      data = data2(), 
-      act_name = '10 - Waste'
+      act_name = '9 - Waste'
     )
   })
 }

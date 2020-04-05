@@ -4,66 +4,59 @@ default:
     act_mid: 7
     max_act: 21
     min_act: 0
-    max_eff: 100
+    max_eff: 90
     steep: 1
   laura:
     name: '2 - Spending time with Laura'
     act_mid: 10.5
     max_act: 31.5
     min_act: 0
-    max_eff: 90
+    max_eff: 80
     steep: 1
   family:
     name: '3 - Spending time with family'
     act_mid: 10.5
     max_act: 31.5
     min_act: 0
-    max_eff: 80
+    max_eff: 70
     steep: 1
   friends:
     name: '4 - Spending time with friends'
     act_mid: 3
     max_act: 9
     min_act: 0
-    max_eff: 70
+    max_eff: 60
     steep: 3
   sleeping:
     name: '5 - Sleeping'
     act_mid: 52.5
     max_act: 73.5
     min_act: 31.5
-    max_eff: 60
+    max_eff: 50
     steep: 1
   learning:
     name: '6 - Learning'
     act_mid: 17.5
     max_act: 52.5
     min_act: 0
-    max_eff: 50
-    steep: 1
-  working:
-    name: '7 - Working'
-    act_mid: 45
-    max_act: 65
-    min_act: 0
     max_eff: 40
-    steep: -1
+    steep: 1
   working_out:
-    name: '8 - Working out'
+    name: '7 - Working out'
     act_mid: 1.75
     max_act: 5.25
     min_act: 0
     max_eff: 30
     steep: 3
-  serving:
-    name: '9 - Serving'
-    act_mid: 1.5
-    max_act: 4.5
+  working:
+    name: '8 - Working'
+    act_mid: 45
+    max_act: 65
     min_act: 0
     max_eff: 20
-    steep: 3
+    steep: -1
   waste:
-    name: '10 - Waste'
+    name: '9 - Waste'
     act_mid: 3.5
     max_act: 10.5
     min_act: 0
