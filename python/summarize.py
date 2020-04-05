@@ -44,7 +44,7 @@ eternity_df2 = eternity_df.groupby(
         )['duration'].sum().unstack().fillna( # Stack and unstack to get all permutations
                 0                             # Fill missing
                 ).resample('W-SAT').sum().stack().reset_index()
-eternity_df2.columns = ['start_datetime', 'activity_name', 'value']
+eternity_df2.columns = ['start_datetime', 'activity_name', 'activity_value']
 
 # =============================================================================
 # Write to database
