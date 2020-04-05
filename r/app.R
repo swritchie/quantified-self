@@ -15,14 +15,18 @@ for (i in RMySQL::dbListConnections(drv = RMySQL::MySQL())) {
 
 # Set new connections
 qs <- config::get(value = 'quantified_self')
-qs_con <- DBI::dbConnect(drv = RMySQL::MySQL(),
-                         user = qs$user,
-                         password = qs$password, 
-                         dbname = qs$dbname)
+qs_con <- DBI::dbConnect(
+  drv = RMySQL::MySQL(),
+  user = qs$user,
+  password = qs$password, 
+  dbname = qs$dbname
+  )
 
 # Extract
-summary_df <- DBI::dbGetQuery(conn = qs_con, 
-                              statement = 'SELECT * FROM summary')
+summary_df <- DBI::dbGetQuery(
+  conn = qs_con, 
+  statement = 'SELECT * FROM summary'
+  )
 
 # Define helper functions -------------------------------------------------
 
@@ -45,8 +49,10 @@ map_value_to_key <- function(act_name) {
 # Calculate effectiveness values corresponding to given activity values
 calc_eff_values <- function(act_name, act_values) {
   temp_chr <- map_value_to_key(act_name = act_name)
-  temp_l  <- config::get(value = temp_chr,
-                         file = 'params.yml')
+  temp_l  <- config::get(
+    value = temp_chr,
+    file = 'params.yml'
+    )
   num <- temp_l$max_eff * 2
   temp_num <- base::as.numeric(x = temp_l$steep)
   denom <- 1 + base::exp(x = -1 * temp_num * (act_values - temp_l$act_mid))
@@ -56,11 +62,49 @@ calc_eff_values <- function(act_name, act_values) {
 # Calculate range of values between activity min and max (for plotting)
 calc_act_range <- function(act_name) {
   temp_chr <- map_value_to_key(act_name = act_name)
-  temp_l  <- config::get(value = temp_chr,
-                         file = 'params.yml')
-  base::seq(from = temp_l$min_act,
-            to = temp_l$max_act,
-            by = .01)
+  temp_l  <- config::get(
+    value = temp_chr,
+    file = 'params.yml'
+    )
+  base::seq(
+    from = temp_l$min_act,
+    to = temp_l$max_act,
+    by = .01
+    )
+}
+
+# Plot
+plot_act <- function(data, act_name) {
+  data %>%
+    dplyr::filter(activity_name == act_name) %>%
+    ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
+                                           y = effectiveness_value)) +
+    ggplot2::geom_point() +
+    ggplot2::geom_text(mapping = ggplot2::aes(
+      x = activity_value, 
+      y = effectiveness_value,
+      label = base::paste0(
+        '(', 
+        base::round(x = activity_value, digits = 1), 
+        ', ', 
+        base::round(x = effectiveness_value, digits = 1), 
+        ')'
+      )
+    ), 
+    nudge_y = -5) +
+    ggplot2::geom_line(
+      data = dplyr::tibble(
+        activity_value = calc_act_range(act_name = act_name),
+        effectiveness_value = calc_eff_values(
+          act_name = act_name, 
+          act_values = activity_value
+        )), 
+      alpha = 1/3
+    ) +
+    ggplot2::ylim(-105, 105) +
+    ggplot2::xlab(label = '') +
+    ggplot2::ylab(label = '') +
+    ggplot2::ggtitle(label = act_name)
 }
 
 # Transform data ----------------------------------------------------------
@@ -78,79 +122,123 @@ summary_df <- summary_df %>%
     .f = calc_eff_values
     ))
 
-# Create background frame
-
-
 # Define UI ---------------------------------------------------------------
 
 ui <- shiny::fluidPage(
-  # Title
-  shiny::titlePanel(title = 'I-count-ability'),
+  # Header
+  shiny::fluidRow(
+    shiny::column(
+      width = 3, 
+      shiny::titlePanel(title = 'I-count-ability')
+      ),
+    shiny::column(
+      width = 7,
+      shiny::dateRangeInput(
+        inputId = 'dates', 
+        label = 'Select date range:', 
+        start = base::as.character(x = base::min(summary_df$start_datetime)),
+        end = base::as.character(x = base::max(summary_df$start_datetime)),
+        min = base::as.character(x = base::min(summary_df$start_datetime)),
+        max = base::as.character(x = base::max(summary_df$start_datetime))
+        )
+      )
+    ),
   
   # Date range
-  shiny::fluidRow(shiny::dateRangeInput(
-    inputId = 'dates', 
-    label = 'Select date range:', 
-    start = base::as.character(x = base::min(summary_df$start_datetime)),
-    end = base::as.character(x = base::max(summary_df$start_datetime)),
-    min = base::as.character(x = base::min(summary_df$start_datetime)),
-    max = base::as.character(x = base::max(summary_df$start_datetime))
-  )),
+  shiny::fluidRow(),
   
   # Summary plot
-  shiny::plotOutput(outputId = 'summary'),
+  shiny::fluidRow(shiny::column(
+    width = 10, 
+    shiny::plotOutput(outputId = 'summary')
+    )),
   
   # Detail plots
   shiny::fluidRow(
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail1')),
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail2')),
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail3')),
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail4')),
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail5')),
-  ),
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail1')
+      ),
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail2')
+      ),
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail3')
+      ),
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail4')
+      ),
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail5')
+      ),
+    ),
   shiny::fluidRow(
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail6')),
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail7')),
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail8')),
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail9')),
-    shiny::column(width = 2, 
-                  shiny::plotOutput(outputId = 'detail10')),
-  ) 
-)
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail6')
+      ),
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail7')
+      ),
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail8')
+      ),
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail9')
+      ),
+    shiny::column(
+      width = 2, 
+      shiny::plotOutput(outputId = 'detail10')
+      ),
+    )
+  )
 
 # Define server -----------------------------------------------------------
 
 server <- function(input, output, session) {
   # Date range
   shiny::observe(x = {
-    shiny::updateDateRangeInput(session = session, 
-                                inputId = 'dates')
+    shiny::updateDateRangeInput(
+      session = session, 
+      inputId = 'dates'
+      )
   })
   
   # Summary data
   data <- shiny::reactive(x = {
     summary_df %>%
-      dplyr::filter(start_datetime >= lubridate::ymd(input$dates[1]),
-                    start_datetime <= lubridate::ymd(input$dates[2])) %>%
+      dplyr::filter(
+        start_datetime >= lubridate::ymd(input$dates[1]),
+        start_datetime <= lubridate::ymd(input$dates[2])
+        ) %>%
       dplyr::group_by(start_datetime) %>%
       dplyr::summarise(effectiveness_value = sum(effectiveness_value))
   })
 
   # Summary plot
   output$summary <- shiny::renderPlot(expr = {
-    ggplot2::ggplot(data = data(),
-                    mapping = ggplot2::aes(x = start_datetime,
-                                           y = effectiveness_value)) +
-      ggplot2::geom_bar(stat = 'identity')
+    ggplot2::ggplot(
+      data = data(),
+      mapping = ggplot2::aes(
+        x = start_datetime,
+        y = effectiveness_value,
+        label = base::round(
+          x = effectiveness_value, 
+          digits = 1
+          )
+        )
+      ) +
+      ggplot2::geom_bar(stat = 'identity') +
+      ggplot2::geom_label() +
+      ggplot2::xlab(label = 'Week') +
+      ggplot2::ylab(label = 'Effectiveness Values')
     })
   
   # Detail data
@@ -161,176 +249,88 @@ server <- function(input, output, session) {
   
   # Detail 1 plot
   output$detail1 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '1 - Reflecting') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '1 - Reflecting'),
-          effectiveness_value = calc_eff_values(
-            act_name = '1 - Reflecting', 
-            act_values = activity_value
-            ))) +
-      ggplot2::ylim(-105, 105)
-    })
+    plot_act(
+      data = data2(), 
+      act_name = '1 - Reflecting'
+    )
+  })
 
   # Detail 2 plot
   output$detail2 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '2 - Spending time with Laura') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '2 - Spending time with Laura'),
-          effectiveness_value = calc_eff_values(
-            act_name = '2 - Spending time with Laura', 
-            act_values = activity_value
-          ))) +
-      ggplot2::ylim(-105, 105)
+    plot_act(
+      data = data2(), 
+      act_name = '2 - Spending time with Laura'
+      )
   })
   
   # Detail 3 plot
   output$detail3 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '3 - Spending time with family') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '3 - Spending time with family'),
-          effectiveness_value = calc_eff_values(
-            act_name = '3 - Spending time with family', 
-            act_values = activity_value
-          ))) +
-      ggplot2::ylim(-105, 105)
+    plot_act(
+      data = data2(), 
+      act_name = '3 - Spending time with family'
+    )
   })
   
   # Detail 4 plot
   output$detail4 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '4 - Spending time with friends') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '4 - Spending time with friends'),
-          effectiveness_value = calc_eff_values(
-            act_name = '4 - Spending time with friends', 
-            act_values = activity_value
-          ))) +
-      ggplot2::ylim(-105, 105)
+    plot_act(
+      data = data2(), 
+      act_name = '4 - Spending time with friends'
+    )
   })
   
   # Detail 5 plot
   output$detail5 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '5 - Sleeping') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '5 - Sleeping'),
-          effectiveness_value = calc_eff_values(
-            act_name = '5 - Sleeping', 
-            act_values = activity_value
-          ))) +
-      ggplot2::ylim(-105, 105)
+    plot_act(
+      data = data2(), 
+      act_name = '5 - Sleeping'
+    )
   })
   
   # Detail 6 plot
   output$detail6 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '6 - Learning') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '6 - Learning'),
-          effectiveness_value = calc_eff_values(
-            act_name = '6 - Learning', 
-            act_values = activity_value
-          ))) +
-      ggplot2::ylim(-105, 105)
+    plot_act(
+      data = data2(), 
+      act_name = '6 - Learning'
+    )
   })
   
   # Detail 7 plot
   output$detail7 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '7 - Working') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '7 - Working'),
-          effectiveness_value = calc_eff_values(
-            act_name = '7 - Working', 
-            act_values = activity_value
-          ))) +
-      ggplot2::ylim(-105, 105)
+    plot_act(
+      data = data2(), 
+      act_name = '7 - Working'
+    )
   })
   
   # Detail 8 plot
   output$detail8 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '8 - Working out') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '8 - Working out'),
-          effectiveness_value = calc_eff_values(
-            act_name = '8 - Working out', 
-            act_values = activity_value
-          ))) +
-      ggplot2::ylim(-105, 105)
+    plot_act(
+      data = data2(), 
+      act_name = '8 - Working out'
+    )
   })
   
   # Detail 9 plot
   output$detail9 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '9 - Serving') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '9 - Serving'),
-          effectiveness_value = calc_eff_values(
-            act_name = '9 - Serving', 
-            act_values = activity_value
-          ))) +
-      ggplot2::ylim(-105, 105)
+    plot_act(
+      data = data2(), 
+      act_name = '9 - Serving'
+    )
   })
   
   # Detail 10 plot
   output$detail10 <- shiny::renderPlot(expr = {
-    data2() %>%
-      dplyr::filter(activity_name == '10 - Waste') %>%
-      ggplot2::ggplot(mapping = ggplot2::aes(x = activity_value, 
-                                             y = effectiveness_value)) +
-      ggplot2::geom_point() +
-      ggplot2::geom_line(
-        data = dplyr::tibble(
-          activity_value = calc_act_range(act_name = '10 - Waste'),
-          effectiveness_value = calc_eff_values(
-            act_name = '10 - Waste', 
-            act_values = activity_value
-          ))) +
-      ggplot2::ylim(-105, 105)
+    plot_act(
+      data = data2(), 
+      act_name = '10 - Waste'
+    )
   })
 }
 
 # Create app --------------------------------------------------------------
 
-shiny::shinyApp(ui = ui,
-                server = server)
+shiny::shinyApp(
+  ui = ui,
+  server = server
+  )
