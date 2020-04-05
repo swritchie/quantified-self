@@ -54,7 +54,7 @@ default:
     max_act: 5.25
     min_act: 0
     max_eff: 30
-    steep: 1
+    steep: 3
   serving:
     name: '9 - Serving'
     act_mid: 1.5
@@ -68,4 +68,4 @@ default:
     max_act: 10.5
     min_act: 0
     max_eff: 10
-    steep: -1
+    steep: -3
