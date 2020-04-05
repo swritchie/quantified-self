@@ -46,7 +46,7 @@ df['happiness'] = df['mood'].map({
         })
 
 # =============================================================================
-# Write to database
+# Get max datetime in database
 # =============================================================================
 
 engine = sqlalchemy.create_engine('mysql+pymysql://{}:{}@{}:{}/{}'.format(
@@ -56,9 +56,18 @@ engine = sqlalchemy.create_engine('mysql+pymysql://{}:{}@{}:{}/{}'.format(
         c.config['port'],
         c.config['database']
         ))
-df.loc[:, ['note', 'datetime', 'happiness']].to_sql(
+temp_dt = pd.read_sql('SELECT MAX(datetime) FROM daylio', engine).iloc[0, 0]
+
+# =============================================================================
+# Write to database
+# =============================================================================
+
+df.loc[
+       df['datetime'] > temp_dt, 
+       ['note', 'datetime', 'happiness']
+       ].to_sql(
         'daylio',
         engine,
-        if_exists='fail',
+        if_exists='append',
         index=False
         )
