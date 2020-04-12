@@ -20,7 +20,7 @@ import sqlalchemy
 # Read in Daylio data
 # =============================================================================
 
-dir_sg = input('What is your directory?\n')
+dir_sg = r'C:\Users\skyla\Downloads'
 file_sg = input('What is your Daylio file?\n')
 df = pd.read_csv(os.path.join(dir_sg, file_sg))
 
